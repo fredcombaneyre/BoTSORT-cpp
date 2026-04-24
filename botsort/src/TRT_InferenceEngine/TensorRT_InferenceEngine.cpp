@@ -1,3 +1,4 @@
+#if 0
 #include "TRT_InferenceEngine/TensorRT_InferenceEngine.h"
 
 #include <NvOnnxParser.h>
@@ -133,8 +134,8 @@ std::string inference_backend::TensorRTInferenceEngine::get_engine_path(
 {
     // Parent director + model name
     std::string engine_path =
-            boost::filesystem::path(onnx_model_path).parent_path().string() +
-            "/" + boost::filesystem::path(onnx_model_path).stem().string();
+            std::filesystem::path(onnx_model_path).parent_path().string() +
+            "/" + std::filesystem::path(onnx_model_path).stem().string();
 
     // Hostname
     char hostname[1024];
@@ -173,7 +174,7 @@ std::string inference_backend::TensorRTInferenceEngine::get_engine_path(
 bool inference_backend::TensorRTInferenceEngine::file_exists(
         const std::string &name) const
 {
-    return boost::filesystem::exists(name);
+    return std::filesystem::exists(name);
 }
 
 
@@ -495,3 +496,5 @@ inference_backend::TensorRTInferenceEngine::forward(const cv::Mat &input_image)
 
     return predictions;
 }
+
+#endif

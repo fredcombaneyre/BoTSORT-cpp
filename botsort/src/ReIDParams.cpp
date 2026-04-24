@@ -6,7 +6,7 @@
 #include "INIReader.h"
 
 
-ReIDParams ReIDParams::load_config(const std::string &config_path)
+bot_sort::ReIDParams bot_sort::ReIDParams::load_config(const std::string &config_path)
 {
     ReIDParams config{};
 

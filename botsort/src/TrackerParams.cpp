@@ -6,7 +6,7 @@
 #include "INIReader.h"
 
 
-TrackerParams TrackerParams::load_config(const std::string &config_path)
+ bot_sort::TrackerParams bot_sort::TrackerParams::load_config(const std::string &config_path)
 {
     TrackerParams config{};
 

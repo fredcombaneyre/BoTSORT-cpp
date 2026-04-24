@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+namespace bot_sort
+{
 struct ReIDParams
 {
     long gpu_id{0};
@@ -19,3 +21,6 @@ struct ReIDParams
 
     static ReIDParams load_config(const std::string &config_path);
 };
+
+} // namespace bot_sort
+

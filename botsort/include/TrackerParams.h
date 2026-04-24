@@ -2,6 +2,8 @@
 
 #include <string>
 
+namespace bot_sort
+{
 struct TrackerParams
 {
     bool reid_enabled{false};
@@ -19,3 +21,5 @@ struct TrackerParams
 
     static TrackerParams load_config(const std::string &config_path);
 };
+
+}

@@ -2,14 +2,15 @@
 
 #include <string>
 #include <variant>
-
-#include "GlobalMotionCompensation.h"
+// #include "GlobalMotionCompensation.h"
 #include "GmcParams.h"
-#include "ReID.h"
+// #include "ReID.h"
 #include "ReIDParams.h"
 #include "TrackerParams.h"
 #include "track.h"
 
+namespace bot_sort
+{
 template<typename T>
 using Config = std::variant<T, std::string, std::monostate>;
 
@@ -19,10 +20,21 @@ public:
     explicit BoTSORT(const Config<TrackerParams> &tracker_config,
                      const Config<GMC_Params> &gmc_config = {},
                      const Config<ReIDParams> &reid_config = {},
-                     const std::string &reid_onnx_model_path = "");
+                     const std::string &reid_onnx_model_path = "", 
+                     bool debug = false);
 
     ~BoTSORT() = default;
 
+
+    // /**
+    //  * @brief Track the objects in the frame
+    //  * 
+    //  * @param detections Detections in the frame
+    //  * @param frame Frame
+    //  * @return std::vector<std::shared_ptr<Track>> 
+    //  */
+    // std::vector<std::shared_ptr<Track>>
+    // track(const std::vector<Detection> &detections, const cv::Mat &frame);
 
     /**
      * @brief Track the objects in the frame
@@ -31,20 +43,29 @@ public:
      * @param frame Frame
      * @return std::vector<std::shared_ptr<Track>> 
      */
-    std::vector<std::shared_ptr<Track>>
-    track(const std::vector<Detection> &detections, const cv::Mat &frame);
+    std::vector<std::shared_ptr<Track>> track(const std::vector<Detection> &detections);
 
 
 private:
     /**
      * @brief Extract visual features from the given frame and bounding box
      * 
-     * @param frame Input frame
-     * @param bbox_tlwh Bounding box (top, left, width, height)
+     * @param featArray Pointer to the feature array
+     * @param featDim Dimension of the feature vector
      * @return FeatureVector Extracted visual features
      */
-    FeatureVector _extract_features(const cv::Mat &frame,
-                                    const cv::Rect_<float> &bbox_tlwh);
+    FeatureVector _get_features(double *featArray, int featDim) ;
+
+
+    // /**
+    //  * @brief Extract visual features from the given frame and bounding box
+    //  * 
+    //  * @param frame Input frame
+    //  * @param bbox_tlwh Bounding box (top, left, width, height)
+    //  * @return FeatureVector Extracted visual features
+    //  */
+    // FeatureVector _extract_features(const cv::Mat &frame,
+    //                                 const cv::Rect_<float> &bbox_tlwh);
 
     /**
      * @brief Merge the given track lists
@@ -84,7 +105,8 @@ private:
             std::vector<std::shared_ptr<Track>> &result_tracks_a,
             std::vector<std::shared_ptr<Track>> &result_tracks_b,
             std::vector<std::shared_ptr<Track>> &tracks_list_a,
-            std::vector<std::shared_ptr<Track>> &tracks_list_b);
+            std::vector<std::shared_ptr<Track>> &tracks_list_b,
+            bool trace);
 
     /**
      * @brief Load tracker parameters from the given config
@@ -105,6 +127,11 @@ private:
     std::vector<std::shared_ptr<Track>> _lost_tracks;
 
     std::unique_ptr<KalmanFilter> _kalman_filter;
-    std::unique_ptr<GlobalMotionCompensation> _gmc_algo;
-    std::unique_ptr<ReIDModel> _reid_model;
+    // std::unique_ptr<GlobalMotionCompensation> _gmc_algo;
+    // std::unique_ptr<ReIDModel> _reid_model;
+    std::string _reid_distance_metric = "euclidean";
+
+    bool _trace;
 };
+
+}// namespace bot_sort

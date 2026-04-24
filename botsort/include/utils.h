@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DataType.h"
+#include <memory>
 
 /**
  * @brief Calculate the cosine distance between two feature vectors

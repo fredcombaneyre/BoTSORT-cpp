@@ -66,7 +66,7 @@ std::tuple<CostMatrix, CostMatrix>
 embedding_distance(const std::vector<std::shared_ptr<Track>> &tracks,
                    const std::vector<std::shared_ptr<Track>> &detections,
                    float max_embedding_distance,
-                   const std::string &distance_metric)
+                   const std::string &distance_metric, int div)
 {
     if (!(distance_metric == "euclidean" || distance_metric == "cosine"))
     {
@@ -100,7 +100,7 @@ embedding_distance(const std::vector<std::shared_ptr<Track>> &tracks,
                 else
                     cost_matrix(i, j) = std::max(
                             0.0f, cosine_distance(tracks[i]->smooth_feat,
-                                                  detections[j]->curr_feat));
+                                                  detections[j]->curr_feat)/div);
 
                 if (cost_matrix(i, j) > max_embedding_distance)
                 {
@@ -160,9 +160,10 @@ void fuse_motion(const KalmanFilter &KF, CostMatrix &cost_matrix,
         Eigen::Matrix<float, 1, Eigen::Dynamic> gating_distance =
                 KF.gating_distance(tracks[i]->mean, tracks[i]->covariance,
                                    measurements, only_position);
-
+        std::cout << "track=" << tracks[i]->getTrackId() << " gating thresh=" << gating_threshold << " gating distance: ";
         for (Eigen::Index j = 0; j < gating_distance.size(); j++)
         {
+            std::cout << gating_distance(0, j) << " ";
             if (gating_distance(0, j) > gating_threshold)
             {
                 cost_matrix(i, j) = std::numeric_limits<float>::infinity();
@@ -171,6 +172,7 @@ void fuse_motion(const KalmanFilter &KF, CostMatrix &cost_matrix,
             cost_matrix(i, j) = lambda * cost_matrix(i, j) +
                                 (1 - lambda) * gating_distance[j];
         }
+        std::cout << std::endl;
     }
 }
 

@@ -1,3 +1,5 @@
+#if 0 // excluding ReID for now as to avoid using OpenCV. 
+
 #include "ReID.h"
 
 #include "INIReader.h"
@@ -67,3 +69,5 @@ void ReIDModel::_load_params_from_config(const ReIDParams &params)
 
     _model_optimization_params.output_layer_names = params.output_layer_names;
 }
+
+#endif

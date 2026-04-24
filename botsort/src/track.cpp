@@ -4,10 +4,14 @@
 
 #include "profiler.h"
 
-Track::Track(std::vector<float> tlwh, float score, uint8_t class_id,
-             std::optional<FeatureVector> feat, int feat_history_size)
-    : det_tlwh(std::move(tlwh)), _score(score), _class_id(class_id),
-      tracklet_len(0), is_activated(false), state(TrackState::New)
+Track::Track(std::vector<float> tlwh, float score, const std::string& class_id, int detId, std::optional<FeatureVector> feat, int feat_history_size):   
+        det_tlwh(std::move(tlwh)), 
+        _score(score), 
+        _class_id(class_id),
+        det_id(detId),
+        tracklet_len(0), 
+        is_activated(false), 
+        state(TrackState::New)
 {
 
     if (feat)
@@ -75,6 +79,7 @@ void Track::re_activate(KalmanFilter &kalman_filter, Track &new_track,
     state = TrackState::Tracked;
     is_activated = true;
     _score = new_track._score;
+    det_id = new_track.det_id;
     this->frame_id = frame_id;
 
     _update_class_id(new_track._class_id, new_track._score);
@@ -142,6 +147,7 @@ void Track::update(KalmanFilter &kalman_filter, Track &new_track,
     state = TrackState::Tracked;
     is_activated = true;
     _score = new_track._score;
+    det_id = new_track.det_id;
     tracklet_len++;
     this->frame_id = frame_id;
 
@@ -228,12 +234,20 @@ float Track::get_score() const
     return _score;
 }
 
-uint8_t Track::get_class_id() const
+std::string Track::get_class_id()
 {
     return _class_id;
 }
 
-void Track::_update_class_id(uint8_t class_id, float score)
+int Track::getTrackId() const { 
+    return track_id; 
+}
+
+int Track::getDetId() const { 
+    return det_id; 
+}
+
+void Track::_update_class_id(const std::string &class_id, float score)
 {
     if (!_class_hist.empty())
     {

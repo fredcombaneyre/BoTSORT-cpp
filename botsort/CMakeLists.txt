@@ -2,6 +2,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.16)
 
 PROJECT(botsort VERSION 1.0 LANGUAGES CXX)
 
+include(FetchContent)
+include(CheckCXXCompilerFlag)
+
 # Set C++ Standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,19 +29,62 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 # Find and link OpenCV
-find_package(OpenCV REQUIRED)
-target_include_directories(${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+# find_package(OpenCV REQUIRED)
+set( OpenCV_DIR 
+    "/ESPDEV/BoTSORT-cpp/opencv" )
+set( OpenCV_INCLUDE_DIRS 
+    "/ESPDEV/BoTSORT-cpp/opencv/usr/include/opencv4" )
+set( OpenCV_LIB_DIR 
+    "/ESPDEV/BoTSORT-cpp/opencv/lib/aarch64-linux-gnu" )
+set( OpenCV_LIBS 
+    "opencv_photo"
+	"opencv_videoio"
+	"opencv_video"
+	"opencv_calib3d"
+	"opencv_features2d"
+	"opencv_imgproc"
+	"opencv_core"
+	"opencv_imgcodecs"
+	"opencv_dnn"
+	"opencv_flann"
+    "opencv_videostab" )
+
+    #libopencv_photo.so.4.5d => /lib/aarch64-linux-gnu/libopencv_photo.so.4.5d 
+	#libopencv_videoio.so.4.5d => /lib/aarch64-linux-gnu/libopencv_videoio.so.4.5d 
+	#libopencv_video.so.4.5d => /lib/aarch64-linux-gnu/libopencv_video.so.4.5d 
+	#libopencv_calib3d.so.4.5d => /lib/aarch64-linux-gnu/libopencv_calib3d.so.4.5d 
+	#libopencv_features2d.so.4.5d => /lib/aarch64-linux-gnu/libopencv_features2d.so.4.5d 
+	#libopencv_imgproc.so.4.5d => /lib/aarch64-linux-gnu/libopencv_imgproc.so.4.5d 
+	#libopencv_core.so.4.5d => /lib/aarch64-linux-gnu/libopencv_core.so.4.5d 
+	#libopencv_imgcodecs.so.4.5d => /lib/aarch64-linux-gnu/libopencv_imgcodecs.so.4.5d 
+	#libopencv_dnn.so.4.5d => /lib/aarch64-linux-gnu/libopencv_dnn.so.4.5d 
+	#libopencv_flann.so.4.5d => /lib/aarch64-linux-gnu/libopencv_flann.so.4.5d 
+message(STATUS "OpenCV_INCLUDE_DIRS = ${OpenCV_INCLUDE_DIRS}")
+message(STATUS "OpenCV_LIBS = ${OpenCV_LIBS}")
+# target_include_directories(${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
+# target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+
+set(EIGEN_VERSION 3.3)
+find_package(Eigen3 ${EIGEN_VERSION} QUIET)
+if(NOT EIGEN3_FOUND)
+  set(BUILD_TESTING OFF CACHE INTERNAL "")
+  FetchContent_Declare(eigen
+    GIT_REPOSITORY  https://gitlab.com/libeigen/eigen.git
+    GIT_TAG         ${EIGEN_VERSION}
+    GIT_SHALLOW     ON)
+  FetchContent_MakeAvailable(eigen)
+  unset(BUILD_TESTING CACHE)
+endif()
 
 # Find and link Eigen3
-find_package(Eigen3 REQUIRED)
-target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
+# find_package(Eigen3 REQUIRED)
+# target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 
 # Find and link Boost
-find_package(Boost REQUIRED COMPONENTS filesystem)
-target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+# find_package(Boost REQUIRED COMPONENTS filesystem)
+# target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
+# target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
 # Find and link CUDA
 find_package(CUDA QUIET)

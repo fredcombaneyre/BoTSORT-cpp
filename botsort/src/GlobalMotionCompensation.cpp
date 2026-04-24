@@ -1,3 +1,5 @@
+#if 0 // excluding GMC for now as to avoid using OpenCV. In our cases the camera is not moving  so GMC is not helpful.
+
 #include "GlobalMotionCompensation.h"
 
 #include <opencv2/videostab/global_motion.hpp>
@@ -596,3 +598,5 @@ OptFlowModified_GMC::apply(const cv::Mat &frame,
               << std::endl;
     return H;
 }
+
+#endif 

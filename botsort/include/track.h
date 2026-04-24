@@ -28,10 +28,10 @@ public:
      * @param class_id Detection class ID
      * @param feat (Optional) Detection feature vector
      * @param feat_history_size Size of the feature history (default: 50)
+     * @param detId Detection ID (default: -1)
      */
-    Track(std::vector<float> tlwh, float score, uint8_t class_id,
-          std::optional<FeatureVector> feat = std::nullopt,
-          int feat_history_size = 50);
+    Track(std::vector<float> tlwh, float score, const std::string& class_id, int detId = -1,
+          std::optional<FeatureVector> feat = std::nullopt, int feat_history_size = 50 );
 
     /**
      * @brief Get the next track ID
@@ -80,9 +80,23 @@ public:
     /**
      * @brief Get the class ID of the track
      * 
-     * @return uint8_t Class ID of the track
+     * @return std::string Class ID of the track
      */
-    uint8_t get_class_id() const;
+    std::string get_class_id();
+
+    /**
+     * @brief Get the Track ID of the track
+     * 
+     * @return int Track ID of the track
+     */
+    int getTrackId() const ;
+
+    /**
+     * @brief Get the Detection ID of the track
+     * 
+     * @return int Detection ID of the track
+     */
+    int getDetId() const ;
 
     /**
      * @brief Activates the track
@@ -179,13 +193,14 @@ private:
      * @param class_id Current class_id for the bounding box
      * @param score Current score for the bounding box
      */
-    void _update_class_id(uint8_t class_id, float score);
+    void _update_class_id(const std::string &class_id, float score);
 
 
 public:
     bool is_activated;
     int track_id;
     int state;
+    int det_id;
 
     uint32_t frame_id, tracklet_len, start_frame;
 
@@ -197,9 +212,9 @@ public:
 
 private:
     std::vector<float> _tlwh;
-    std::vector<std::pair<uint8_t, float>> _class_hist;
+    std::vector<std::pair<std::string, float>> _class_hist;
     float _score;
-    uint8_t _class_id;
+    std::string _class_id;
     static constexpr float _alpha = 0.9;
 
     int _feat_history_size;
