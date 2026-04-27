@@ -3,6 +3,9 @@
 #include <string>
 #include <variant>
 
+namespace bot_sort
+{
+
 enum GMC_Method
 {
     ORB = 0,
@@ -63,6 +66,8 @@ struct GMC_Params
     GMC_Method method_;
     MethodParams method_params_;
 
-    static GMC_Params load_config(GMC_Method method,
-                                  const std::string &config_path);
+    // static GMC_Params load_config(GMC_Method method,
+    //                               const std::string &config_path);
 };
+
+} // namespace bot_sort

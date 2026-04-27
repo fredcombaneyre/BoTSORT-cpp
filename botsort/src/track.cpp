@@ -2,7 +2,9 @@
 
 #include <utility>
 
-#include "profiler.h"
+// #include "profiler.h"
+namespace bot_sort 
+{
 
 Track::Track(std::vector<float> tlwh, float score, const std::string& class_id, int detId, std::optional<FeatureVector> feat, int feat_history_size):   
         det_tlwh(std::move(tlwh)), 
@@ -280,3 +282,5 @@ void Track::_update_class_id(const std::string &class_id, float score)
         _class_id = class_id;
     }
 }
+
+} // namespace bot_sort

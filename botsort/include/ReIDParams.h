@@ -8,7 +8,7 @@ namespace bot_sort
 struct ReIDParams
 {
     long gpu_id{0};
-    std::string distance_metric{"euclidean"};
+    std::string distance_metric{"cosine"};
     long trt_logging_level{1};
     long batch_size{1};
     std::string input_layer_name{""};
@@ -19,7 +19,7 @@ struct ReIDParams
     bool enable_tf32{true};
     bool swap_rb{false};
 
-    static ReIDParams load_config(const std::string &config_path);
+    // static ReIDParams load_config(const std::string &config_path);
 };
 
 } // namespace bot_sort

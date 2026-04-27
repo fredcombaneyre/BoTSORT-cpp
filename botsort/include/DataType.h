@@ -8,10 +8,11 @@
 #include <vector>
 
 // #include <opencv2/core.hpp>
-
+namespace bot_sort 
+{
 
 constexpr uint8_t DET_ELEMENTS = 4;
-constexpr uint32_t FEATURE_DIM = 512;
+// constexpr uint32_t FEATURE_DIM = 512;
 constexpr uint8_t KALMAN_STATE_SPACE_DIM = 8;
 constexpr uint8_t KALMAN_MEASUREMENT_SPACE_DIM = 4;
 
@@ -21,7 +22,6 @@ constexpr uint8_t KALMAN_MEASUREMENT_SPACE_DIM = 4;
  */
 using DetVec = Eigen::Matrix<float, 1, DET_ELEMENTS>;
 
-namespace bot_sort {
 
 /**
  * @brief Struct representing a Rectangle. This replaces cv::Rect_<> to avoid including OpenCV in the header file.
@@ -35,19 +35,11 @@ template<typename T>
 class Rect_ {    
 public:    
     Rect_() = default;
-    Rect_(const T &_x, const T &_y, const T &_width, const T &_height){
-        x = _x;
-        y = _y;
-        width = _width;
-        height = _height;
-    };
-
+    Rect_(const T &_x, const T &_y, const T &_width, const T &_height):
+        x(_x), y (_y), width(_width), height(_height){};
     ~Rect_() {};
-
     T x, y, width, height;
 };
-
-
 
 /**
  * @brief Struct representing a detection
@@ -66,11 +58,9 @@ struct Detection {
 
     Detection(const bot_sort::Rect_<float> &_rect,const std::string &_class_id, const float &_confidence,
               double *_featArray = nullptr, int _featDim = 0, int _detId = -1): 
-                bbox_tlwh(_rect), class_id(_class_id),confidence(_confidence),
-                featArray(_featArray),featDim(_featDim), detId(_detId) {};
+        bbox_tlwh(_rect), class_id(_class_id),confidence(_confidence),
+        featArray(_featArray),featDim(_featDim), detId(_detId) {};
 };
-
-} // namespace bot_sort
 
 
 // Re-ID Features
@@ -92,8 +82,7 @@ using KFStateSpaceVec = Eigen::Matrix<float, 1, KALMAN_STATE_SPACE_DIM>;
 /**
  * @brief Kalman Filter state space matrix with KALMAN_STATE_SPACE_DIM rows and columns.
  */
-using KFStateSpaceMatrix =
-        Eigen::Matrix<float, KALMAN_STATE_SPACE_DIM, KALMAN_STATE_SPACE_DIM>;
+using KFStateSpaceMatrix = Eigen::Matrix<float, KALMAN_STATE_SPACE_DIM, KALMAN_STATE_SPACE_DIM>;
 /**
  * @brief Kalman Filter state space data containing a mean vector and a covariance matrix.
  */
@@ -106,8 +95,7 @@ using KFMeasSpaceVec = Eigen::Matrix<float, 1, KALMAN_MEASUREMENT_SPACE_DIM>;
 /**
  * @brief Kalman Filter measurement space matrix with KALMAN_MEASUREMENT_SPACE_DIM rows and columns.
  */
-using KFMeasSpaceMatrix = Eigen::Matrix<float, KALMAN_MEASUREMENT_SPACE_DIM,
-                                        KALMAN_MEASUREMENT_SPACE_DIM>;
+using KFMeasSpaceMatrix = Eigen::Matrix<float, KALMAN_MEASUREMENT_SPACE_DIM, KALMAN_MEASUREMENT_SPACE_DIM>;
 /**
  * @brief Kalman Filter measurement space data containing a mean vector and a covariance matrix.
  */
@@ -147,3 +135,5 @@ struct AssociationData
     std::vector<int> unmatched_track_indices;///< Unmatched track indices.
     std::vector<int> unmatched_det_indices;  ///< Unmatched detection indices
 };
+
+} // namespace bot_sort

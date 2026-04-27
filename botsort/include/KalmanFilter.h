@@ -2,10 +2,20 @@
 
 #include "DataType.h"
 
+using namespace bot_sort;
+
 namespace bot_kalman
 {
 class KalmanFilter
 {
+    // A simple Kalman filter for tracking bounding boxes in image space.
+    // The 8-dimensional state space
+    //     x, y, w, h, vx, vy, vw, vh
+    // contains the bounding box center position (x, y), width w, height h,
+    // and their respective velocities.
+    // Object motion follows a constant velocity model. The bounding box location
+    // (x, y, w, h) is taken as direct observation of the state space (linear
+    // observation model).
 public:
     /**
      * @brief Construct a new Kalman Filter object.
@@ -78,6 +88,9 @@ private:
 
 
 public:
+// Table for the 0.95 quantile of the chi-square distribution with N degrees of
+// freedom (contains values for N=1, ..., 9). Taken from MATLAB/Octave's chi2inv
+// function and used as Mahalanobis gating threshold.
     static constexpr double chi2inv95[10] = {0,      3.8415, 5.9915, 7.8147,
                                              9.4877, 11.070, 12.592, 14.067,
                                              15.507, 16.919};

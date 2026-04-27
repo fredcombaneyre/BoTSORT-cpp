@@ -2,6 +2,7 @@
 
 #include <string>
 #include <variant>
+#include "DataType.h"
 // #include "GlobalMotionCompensation.h"
 #include "GmcParams.h"
 // #include "ReID.h"

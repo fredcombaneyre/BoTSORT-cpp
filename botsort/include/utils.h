@@ -3,6 +3,8 @@
 #include "DataType.h"
 #include <memory>
 
+namespace bot_sort {
+
 /**
  * @brief Calculate the cosine distance between two feature vectors
  * 
@@ -56,3 +58,5 @@ double lapjv(CostMatrix &cost, std::vector<int> &rowsol,
              std::vector<int> &colsol, bool extend_cost = false,
              float cost_limit = std::numeric_limits<float>::max(),
              bool return_cost = true);
+
+} // namespace bot_sort

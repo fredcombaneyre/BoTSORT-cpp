@@ -2,7 +2,7 @@
 
 #include <Eigen/Cholesky>
 
-namespace acc_kalman
+namespace bot_acc_kalman
 {
 KalmanFilter::KalmanFilter(double dt)
     : _init_pos_weight(5.0), _init_vel_weight(15.0),
@@ -167,4 +167,4 @@ Eigen::Matrix<float, 1, Eigen::Dynamic> KalmanFilter::gating_distance(
 
     return mahalanobis_distances;
 }
-}// namespace acc_kalman
+}// namespace bot_acc_kalman

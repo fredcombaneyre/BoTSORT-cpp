@@ -19,7 +19,7 @@ struct TrackerParams
     long frame_rate{30};
     float lambda{0.985F};
 
-    static TrackerParams load_config(const std::string &config_path);
+    // static TrackerParams load_config(const std::string &config_path);
 };
 
-}
+} // nameapace bot_sort

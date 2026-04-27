@@ -3,6 +3,9 @@
 #include "DataType.h"
 #include "utils.h"
 
+namespace bot_sort {
+
+
 std::tuple<CostMatrix, CostMatrix>
 iou_distance(const std::vector<std::shared_ptr<Track>> &tracks,
              const std::vector<std::shared_ptr<Track>> &detections,
@@ -160,10 +163,10 @@ void fuse_motion(const KalmanFilter &KF, CostMatrix &cost_matrix,
         Eigen::Matrix<float, 1, Eigen::Dynamic> gating_distance =
                 KF.gating_distance(tracks[i]->mean, tracks[i]->covariance,
                                    measurements, only_position);
-        std::cout << "track=" << tracks[i]->getTrackId() << " gating thresh=" << gating_threshold << " gating distance: ";
+        // std::cout << "track=" << tracks[i]->getTrackId() << " gating thresh=" << gating_threshold << " gating distance: ";
         for (Eigen::Index j = 0; j < gating_distance.size(); j++)
         {
-            std::cout << gating_distance(0, j) << " ";
+            // std::cout << gating_distance(0, j) << " ";
             if (gating_distance(0, j) > gating_threshold)
             {
                 cost_matrix(i, j) = std::numeric_limits<float>::infinity();
@@ -172,7 +175,7 @@ void fuse_motion(const KalmanFilter &KF, CostMatrix &cost_matrix,
             cost_matrix(i, j) = lambda * cost_matrix(i, j) +
                                 (1 - lambda) * gating_distance[j];
         }
-        std::cout << std::endl;
+        // std::cout << std::endl;
     }
 }
 
@@ -197,7 +200,7 @@ CostMatrix fuse_iou_with_emb(CostMatrix &iou_dist, CostMatrix &emb_dist,
         return iou_dist;
     }
 
-    // If IoU distance is larger than threshold, don't use embedding at all
+    // If IoU distance is larger than IoU threshold, don't use embedding at all
     for (Eigen::Index i = 0; i < iou_dist.rows(); i++)
     {
         for (Eigen::Index j = 0; j < iou_dist.cols(); j++)
@@ -209,7 +212,7 @@ CostMatrix fuse_iou_with_emb(CostMatrix &iou_dist, CostMatrix &emb_dist,
         }
     }
 
-    // If emb distance is larger than threshold, set the emb distance to inf
+    // If emb distance is larger than emb threshold, set the emb distance to inf
     for (Eigen::Index i = 0; i < emb_dist.rows(); i++)
     {
         for (Eigen::Index j = 0; j < emb_dist.cols(); j++)
@@ -280,3 +283,5 @@ AssociationData linear_assignment(CostMatrix &cost_matrix, float thresh)
 
     return associations;
 }
+
+} // namespace bot_sort

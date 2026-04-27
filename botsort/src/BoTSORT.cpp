@@ -2,13 +2,15 @@
 
 #include <optional>
 #include <unordered_set>
+#include <iostream>
 
 // #include <opencv2/imgproc.hpp>
 
 #include "DataType.h"
-#include "INIReader.h"
+// #include "INIReader.h"
 #include "matching.h"
 // #include "profiler.h"
+#include <map>
 
 namespace bot_sort
 {
@@ -99,6 +101,16 @@ T fetch_config(const Config<T> &config,
     throw std::runtime_error("Config is empty");
 }
 
+template<typename T>
+T get_config(const Config<T> &config)
+{
+    if (std::holds_alternative<T>(config))
+    {
+        return std::get<T>(config);
+    }
+
+    throw std::runtime_error("Config is empty");
+}
 
 BoTSORT::BoTSORT(const Config<TrackerParams> &tracker_config,
                             const Config<GMC_Params> &gmc_config,
@@ -106,7 +118,8 @@ BoTSORT::BoTSORT(const Config<TrackerParams> &tracker_config,
                             const std::string &reid_onnx_model_path,
                             bool trace) : _trace(trace)
 {
-    auto tracker_params = fetch_config<TrackerParams>(tracker_config, TrackerParams::load_config);
+    // auto tracker_params = fetch_config<TrackerParams>(tracker_config, TrackerParams::load_config);
+    auto tracker_params = get_config<TrackerParams>(tracker_config);
     _load_params_from_config(tracker_params);
 
     // Tracker module
@@ -119,11 +132,12 @@ BoTSORT::BoTSORT(const Config<TrackerParams> &tracker_config,
     // Re-ID module, load visual feature extractor here
     if (_reid_enabled && not_empty(reid_config) && reid_onnx_model_path.size() > 0){
 
-        auto reid_params = fetch_config<ReIDParams>(reid_config, ReIDParams::load_config);
-        _reid_distance_metric = reid_params.distance_metric;
+        // auto reid_params = fetch_config<ReIDParams>(reid_config, ReIDParams::load_config);
         // _reid_model = std::make_unique<ReIDModel>(reid_params, reid_onnx_model_path); 
+        auto reid_params = get_config<ReIDParams>(reid_config);
+        _reid_distance_metric = reid_params.distance_metric;
     } else {
-        std::cout << "Re-ID module disabled" << std::endl;
+        // std::cout << "Re-ID module disabled" << std::endl;
         _reid_enabled = false;
     }
 
@@ -134,27 +148,26 @@ BoTSORT::BoTSORT(const Config<TrackerParams> &tracker_config,
         // _gmc_algo = std::make_unique<GlobalMotionCompensation>(gmc_params);
     }
     else {
-        std::cout << "GMC disabled" << std::endl;
+        // std::cout << "GMC disabled" << std::endl;
         _gmc_enabled = false;
     }
 }
 
 std::vector<std::shared_ptr<Track>>
-// BoTSORT::track(const std::vector<Detection> &detections, const cv::Mat &frame)
 BoTSORT::track(const std::vector<Detection> &detections) {
+// BoTSORT::track(const std::vector<Detection> &detections, const cv::Mat &frame)
 
     ////////////////// CREATE TRACK OBJECT FOR ALL THE DETECTIONS //////////////////
     // For all detections, extract features, create tracks and classify on the segregate of confidence
     _frame_id++;
     int _ic=0; // used for logging purposes to count the number of items printed in a line for better formatting
 
-    if (_trace){ std::cout << " -------------------- BoTSORT trace ---------------------" << std::endl;}
+    LOG_START
     LOG_TITLE_STEP(_frame_id, "0", "Get detections");
     LOG_TITLE_ARG("L < score=%f <= H", _track_high_thresh)
 
     std::vector<std::shared_ptr<Track>> activated_tracks, refind_tracks;
-    std::vector<std::shared_ptr<Track>> detections_high_conf,
-            detections_low_conf;
+    std::vector<std::shared_ptr<Track>> detections_high_conf, detections_low_conf;
     detections_low_conf.reserve(detections.size()),
             detections_high_conf.reserve(detections.size());
 
@@ -238,6 +251,7 @@ BoTSORT::track(const std::vector<Detection> &detections) {
     ////////////////// First association, with high score detection boxes //////////////////
     // Find IoU distance between all tracked tracks and high confidence detections
     CostMatrix iou_dists, raw_emd_dist, iou_dists_mask_1st_association, emd_dist_mask_1st_association;
+    CostMatrix distances_first_association;
 
     std::tie(iou_dists, iou_dists_mask_1st_association) = iou_distance(tracks_pool, detections_high_conf, _proximity_thresh);
     fuse_score(iou_dists,detections_high_conf);// Fuse the score with IoU distance
@@ -246,23 +260,44 @@ BoTSORT::track(const std::vector<Detection> &detections) {
     LOG_TITLE_ARG("IoU distances < 1 -- [track]=> (det)=dist fuse(iou+score) ")
     
     LOG_TRACK_DET_DISTANCE(tracks_pool, detections_high_conf, iou_dists)
-        
+    
     if (_reid_enabled)
     {
         // If re-ID is enabled, find the embedding distance between all tracked tracks and high confidence detections
         std::tie(raw_emd_dist, emd_dist_mask_1st_association) =
+                    embedding_distance(tracks_pool, detections_high_conf,_appearance_thresh,_reid_distance_metric, 2);
                 // embedding_distance(tracks_pool, detections_high_conf,_appearance_thresh,_reid_model->get_distance_metric());
-                embedding_distance(tracks_pool, detections_high_conf,_appearance_thresh,_reid_distance_metric, 2);
-
-        // fuse_motion(*_kalman_filter, raw_emd_dist, tracks_pool, detections_high_conf, _lambda);// Fuse the motion with embedding distance
+                
 
         LOG_TITLE_ARG("Embedding distances -- [track]=> (det)=dist ( _appearance_thresh=%f )", _appearance_thresh)
         LOG_TRACK_DET_DISTANCE(tracks_pool, detections_high_conf, raw_emd_dist)
-    }
 
-    // Fuse the IoU distance and embedding distance to get the final distance matrix
-    CostMatrix distances_first_association = fuse_iou_with_emb(
-            iou_dists, raw_emd_dist, iou_dists_mask_1st_association, emd_dist_mask_1st_association);
+        // Fuse the IoU distance and embedding distance to get the final distance matrix
+        // IoU and emb masks will be applied on emb_dists, and we will take the min(iou_dists, emb_dists)
+        distances_first_association = fuse_iou_with_emb(iou_dists, raw_emd_dist, 
+                                        iou_dists_mask_1st_association, emd_dist_mask_1st_association);
+        
+        // // Popular ReID method (JDE / FairMOT)        
+        // std::tie(raw_emd_dist, emd_dist_mask_1st_association) =
+        //         // embedding_distance(tracks_pool, detections_high_conf,_appearance_thresh,_reid_model->get_distance_metric());
+        //         embedding_distance(tracks_pool, detections_high_conf,_appearance_thresh,_reid_distance_metric, 1); 
+        // fuse_motion(*_kalman_filter, raw_emd_dist, tracks_pool, detections_high_conf, _lambda);// Fuse the motion with embedding distance 
+        // distances_first_association = raw_emd_dist;  
+        
+        // // IoU masking ReID
+        // std::tie(raw_emd_dist, emd_dist_mask_1st_association) =
+        //         // embedding_distance(tracks_pool, detections_high_conf,_appearance_thresh,_reid_model->get_distance_metric());
+        //         embedding_distance(tracks_pool, detections_high_conf,_appearance_thresh,_reid_distance_metric, 1); 
+        // CostMatrix dummy_empty_mat; // using dummy empty matrix to just apply iou_dists_mask_1st_association over raw_emd_dist
+        // distances_first_association = fuse_iou_with_emb(
+        //         raw_emd_dist, dummy_empty_mat, iou_dists_mask_1st_association, dummy_empty_mat);
+
+    } else { // IOU only
+        // Fuse the IoU distance and embedding distance to get the final distance matrix
+        // We are not using ReID here so raw_emd_dist is empty and we are just appliying iou mask over iou_dists. 
+        distances_first_association = fuse_iou_with_emb(iou_dists, raw_emd_dist, 
+                                    iou_dists_mask_1st_association, emd_dist_mask_1st_association);
+    }
 
     LOG_TITLE_ARG("IoU distances < 1 [track]=> (det)=dist fuse(iou+emb) ")
     LOG_TRACK_DET_DISTANCE(tracks_pool, detections_high_conf, distances_first_association);
@@ -299,6 +334,7 @@ BoTSORT::track(const std::vector<Detection> &detections) {
     }
     
     LOG_ITEM_END_LINE;
+    
     ////////////////// First association, with high score detection boxes //////////////////
 
 
@@ -321,7 +357,7 @@ BoTSORT::track(const std::vector<Detection> &detections) {
     }
     LOG_ITEM_END_LINE;
 
-    
+
     LOG_TITLE_STEP(_frame_id, "2", "Second association, using low score dets");
     
 
@@ -335,7 +371,7 @@ BoTSORT::track(const std::vector<Detection> &detections) {
     // Perform linear assignment on the distance matrix, LAPJV algorithm is used here
     AssociationData second_associations = linear_assignment(iou_dists_second, 0.5);
 
-    LOG_TITLE_ARG("IoU assignments with Low detections (IoU < 0.5) ")
+    LOG_TITLE_ARG("IoU assignments with Low detections - match_thresh=0.5 (fixed) ")
     LOG_INIT_COUNT
 
     // Update the tracks with the associated detections
@@ -392,8 +428,8 @@ BoTSORT::track(const std::vector<Detection> &detections) {
     CostMatrix iou_dists_unconfirmed, raw_emd_dist_unconfirmed,
             iou_dists_mask_unconfirmed, emd_dist_mask_unconfirmed;
 
-    std::tie(iou_dists_unconfirmed, iou_dists_mask_unconfirmed) = iou_distance(
-            unconfirmed_tracks, unmatched_detections_after_1st_association, _proximity_thresh);
+    std::tie(iou_dists_unconfirmed, iou_dists_mask_unconfirmed) =
+                iou_distance( unconfirmed_tracks, unmatched_detections_after_1st_association, _proximity_thresh);
     fuse_score(iou_dists_unconfirmed, unmatched_detections_after_1st_association);
 
     LOG_TITLE_ARG("IoU distances < 1 ( [det]=fuse(iou+score) )")
@@ -422,7 +458,7 @@ BoTSORT::track(const std::vector<Detection> &detections) {
     // Perform linear assignment on the distance matrix, LAPJV algorithm is used here
     AssociationData unconfirmed_associations = linear_assignment(distances_unconfirmed, 0.7);
 
-    LOG_TITLE_ARG("IoU assignments with High detections (IoU < match_thresh=0.7 (fixed)) ")
+    LOG_TITLE_ARG("IoU assignments with High detections - match_thresh=0.7 (fixed) ")
     LOG_INIT_COUNT
     
     for (const std::pair<int, int> &match: unconfirmed_associations.matches)
@@ -521,14 +557,13 @@ BoTSORT::track(const std::vector<Detection> &detections) {
 
     std::vector<std::shared_ptr<Track>> tracked_tracks_cleaned, lost_tracks_cleaned;
 
-    LOG_TITLE_STEP(_frame_id, "6", "Remove duplicate tracks - IOU overlap > 0.15 (fixed)")
+    LOG_TITLE_STEP(_frame_id, "6", "Remove duplicate tracks - IOU distance < 0.15 (fixed)")
 
     _remove_duplicate_tracks(tracked_tracks_cleaned, lost_tracks_cleaned, _tracked_tracks, _lost_tracks, _trace);
     _tracked_tracks = tracked_tracks_cleaned,
     _lost_tracks = lost_tracks_cleaned;
 
-    // as removed_tracks is a local shared pointers vector, it should clean itself when this function ends and avoid memory leak. 
-    // std::cout << "FRED ===> Number of removed tracks: " << removed_tracks.size() << std::endl;
+    // Note: as removed_tracks is a local shared pointers vector, it should clean itself when this function ends and avoid memory leak. 
      
     ////////////////// Clean up the track lists //////////////////
 
@@ -566,7 +601,7 @@ BoTSORT::_get_features(double *featArray, int featDim) {
     }
     for (int i = 0; i < featDim; i++) {
         feature_vector(0, i) = (float)featArray[i];
-        // Eigen::Map<FeatureVector> feature_vector(featArray, 0, featDim); // can't do this as featArray is double* but feature_vector is float for now. 
+        // Eigen::Map<FeatureVector> feature_vector(featArray, 0, featDim); // can't do this as featArray is double* but feature_vector is float* for now. 
     }
     return feature_vector;
 }

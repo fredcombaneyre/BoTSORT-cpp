@@ -6,6 +6,9 @@
 #include "DataType.h"
 #include "track.h"
 
+namespace bot_sort 
+{
+
 /**
  * @brief Calculate the IoU distance between tracks and detections and create a mask for the cost matrix
  *  when the IoU distance is greater than the threshold
@@ -95,3 +98,5 @@ CostMatrix fuse_iou_with_emb(CostMatrix &iou_dist, CostMatrix &emb_dist,
  * @return AssociationData Association data
  */
 AssociationData linear_assignment(CostMatrix &cost_matrix, float thresh);
+
+} // namespace bot_sort

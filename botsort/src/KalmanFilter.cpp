@@ -4,8 +4,12 @@
 
 namespace bot_kalman
 {
-KalmanFilter::KalmanFilter(double dt)
-    : _std_weight_position(1.0 / 20), _std_weight_velocity(1.0 / 160)
+// # Motion and observation uncertainty are chosen relative to the current
+// # state estimate. These weights control the amount of uncertainty in
+// # the model. This is a bit hacky.
+KalmanFilter::KalmanFilter(double dt): 
+                        _std_weight_position(1.0 / 20), 
+                        _std_weight_velocity(1.0 / 160)
 {
 
     _init_kf_matrices(dt);
@@ -124,8 +128,7 @@ Eigen::Matrix<float, 1, Eigen::Dynamic> KalmanFilter::gating_distance(
     }
 
     Eigen::LLT<Eigen::MatrixXf> lltOfProjectedCovariance(projected_covariance);
-    Eigen::Matrix<float, 1, Eigen::Dynamic> mahalanobis_distances(
-            measurements.size());
+    Eigen::Matrix<float, 1, Eigen::Dynamic> mahalanobis_distances(measurements.size());
     mahalanobis_distances.setZero();
 
     for (Eigen::Index i = 0; i < measurements.size(); i++)

@@ -2,7 +2,9 @@
 
 #include "DataType.h"
 
-namespace acc_kalman
+using namespace bot_sort;
+
+namespace bot_acc_kalman
 {
 class KalmanFilter
 {
@@ -102,4 +104,4 @@ private:
                   Eigen::RowMajor>
             _process_noise_covariance;
 };
-}// namespace acc_kalman
+}// namespace bot_acc_kalman

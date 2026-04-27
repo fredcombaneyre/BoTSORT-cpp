@@ -8,6 +8,9 @@
 
 using KalmanFilter = bot_kalman::KalmanFilter;
 
+namespace bot_sort 
+{
+
 enum TrackState
 {
     New = 0,
@@ -220,3 +223,5 @@ private:
     int _feat_history_size;
     std::deque<std::shared_ptr<FeatureVector>> _feat_history;
 };
+
+} //namespace bot_sort
