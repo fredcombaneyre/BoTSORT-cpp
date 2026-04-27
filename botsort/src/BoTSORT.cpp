@@ -164,7 +164,7 @@ BoTSORT::track(const std::vector<Detection> &detections) {
 
     LOG_START
     LOG_TITLE_STEP(_frame_id, "0", "Get detections");
-    LOG_TITLE_ARG("L < score=%f <= H", _track_high_thresh)
+    LOG_TITLE_ARG("L < score=%.02f <= H", _track_high_thresh)
 
     std::vector<std::shared_ptr<Track>> activated_tracks, refind_tracks;
     std::vector<std::shared_ptr<Track>> detections_high_conf, detections_low_conf;
@@ -269,7 +269,7 @@ BoTSORT::track(const std::vector<Detection> &detections) {
                 // embedding_distance(tracks_pool, detections_high_conf,_appearance_thresh,_reid_model->get_distance_metric());
                 
 
-        LOG_TITLE_ARG("Embedding distances -- [track]=> (det)=dist ( _appearance_thresh=%f )", _appearance_thresh)
+        LOG_TITLE_ARG("Embedding distances -- [track]=> (det)=dist ( _appearance_thresh=%.02f )", _appearance_thresh)
         LOG_TRACK_DET_DISTANCE(tracks_pool, detections_high_conf, raw_emd_dist)
 
         // Fuse the IoU distance and embedding distance to get the final distance matrix
@@ -306,7 +306,7 @@ BoTSORT::track(const std::vector<Detection> &detections) {
     // Perform linear assignment on the final distance matrix, LAPJV algorithm is used here
     AssociationData first_associations = linear_assignment(distances_first_association, _match_thresh);
 
-    LOG_TITLE_ARG("IoU assignments with High detections (IoU < match_thresh=%f)", _match_thresh)
+    LOG_TITLE_ARG("IoU assignments with High detections (IoU < match_thresh=%.02f)", _match_thresh)
     LOG_INIT_COUNT
 
     // Update the tracks with the associated detections
@@ -497,7 +497,7 @@ BoTSORT::track(const std::vector<Detection> &detections) {
 
     ////////////////// Initialize new tracks //////////////////
     LOG_TITLE_STEP(_frame_id, "4", "Initialize new tracks ");    
-    LOG_TITLE_ARG("Init only tracks with score >= new_track_thresh=%f", _new_track_thresh)
+    LOG_TITLE_ARG("Init only tracks with score >= new_track_thresh=%.02f", _new_track_thresh)
     LOG_INIT_COUNT
 
     std::vector<std::shared_ptr<Track>> unmatched_high_conf_detections;
